@@ -9,8 +9,6 @@ void main() {
 
     BYTE buf[SHA256_BLOCK_SIZE];
 	SHA256_CTX ctx;
-	int idx;
-	int pass = 1;
 
 	sha256_init(&ctx);
 	sha256_update(&ctx, text1, strlen(text1));
@@ -24,5 +22,4 @@ void main() {
     printf("The integer is %d\n", buf[5]);
     printf("The integer is %d\n", buf[6]);
     printf("The integer is %d\n", buf[7]);
-
 }
