@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <memory.h>
 #include <string.h>
-#include "sha256.h"
+#include "sha256.c"
 
 /*********************** FUNCTION DEFINITIONS ***********************/
 int sha256_test()
@@ -23,6 +23,7 @@ int sha256_test()
 	BYTE text1[] = {"abc"};
 	BYTE text2[] = {"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"};
 	BYTE text3[] = {"aaaaaaaaaa"};
+
 	BYTE hash1[SHA256_BLOCK_SIZE] = {0xba,0x78,0x16,0xbf,0x8f,0x01,0xcf,0xea,0x41,0x41,0x40,0xde,0x5d,0xae,0x22,0x23,
 	                                 0xb0,0x03,0x61,0xa3,0x96,0x17,0x7a,0x9c,0xb4,0x10,0xff,0x61,0xf2,0x00,0x15,0xad};
 	BYTE hash2[SHA256_BLOCK_SIZE] = {0x24,0x8d,0x6a,0x61,0xd2,0x06,0x38,0xb8,0xe5,0xc0,0x26,0x93,0x0c,0x3e,0x60,0x39,
@@ -53,9 +54,31 @@ int sha256_test()
 	return(pass);
 }
 
+
+int * sample_n(int n)
+{
+	SHA256_CTX ctx;
+	BYTE text1[] = {"abc"};
+
+	int * ptr = (int*) malloc(n * sizeof(int));
+
+	for (int i = 0; i < n; i++) {
+		if (i%8 ==0) {
+			BYTE buf[SHA256_BLOCK_SIZE];
+			sha256_init(&ctx);
+			sha256_update(&ctx, text1, strlen(text1));
+			sha256_final(&ctx, buf);
+			
+			ptr[i/8] = (text1[0] << 24) + (text1[1] << 16) + (text1[2] << 8) + text1[3];
+		}
+	}
+	return(ptr);
+}
+
 int main()
 {
 	printf("SHA-256 tests: %s\n", sha256_test() ? "SUCCEEDED" : "FAILED");
-
+	int* result = sample_n(8);
+	printf("%d", result[0]);
 	return(0);
 }
