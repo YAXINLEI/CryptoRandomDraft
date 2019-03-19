@@ -41,12 +41,12 @@ CryptoRandomDraft/
             sha256_update
             sha256_final
 ```
-The function f(x) in 
-for a function f(x) in `cryptorandom.py`, we would define the function f(x) in `cryptorandom.pyx` as:
+For each function f(x) in the original `cryptorandom.py`, we would define the function f(x) in `cryptorandom.pyx` as:
 ```
 f(x):
     cmodule::cryptorandom_c.f(x)
 ```
+where the actual implementation of `f(x)` is in `cmodule/cryptorandom_c.c` and the cython .pyx file just calls the c function.
 
 
 #### Notes we might want to remember:
