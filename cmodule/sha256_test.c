@@ -62,23 +62,32 @@ int * sample_n(int n)
 
 	int * ptr = (int*) malloc(n * sizeof(int));
 
-	for (int i = 0; i < n; i++) {
-		if (i%8 ==0) {
-			BYTE buf[SHA256_BLOCK_SIZE];
-			sha256_init(&ctx);
-			sha256_update(&ctx, text1, strlen(text1));
-			sha256_final(&ctx, buf);
-			
-			ptr[i/8] = (text1[0] << 24) + (text1[1] << 16) + (text1[2] << 8) + text1[3];
+	for (int i = 0; i < n/8 + 1; i++) {
+
+		BYTE buf[SHA256_BLOCK_SIZE];
+
+		sha256_init(&ctx);
+		sha256_update(&ctx, text1, strlen(text1));
+		sha256_final(&ctx, buf);
+
+		for (int j = 0; j < 8; j++) {
+			ptr[i+j] = ((int)buf[j] << 24) + ((int)buf[j+1] << 16) + ((int)buf[j+2] << 8) + (int)buf[j+3];
 		}
+		// How to update the bytes?
 	}
 	return(ptr);
 }
+
+
 
 int main()
 {
 	printf("SHA-256 tests: %s\n", sha256_test() ? "SUCCEEDED" : "FAILED");
 	int* result = sample_n(8);
-	printf("%d", result[0]);
+	printf("%d\n", result[0]);
+	printf("%d\n", result[1]);
+	printf("%d\n", result[2]);
+	printf("%d\n", result[3]);
+	printf("%d\n", result[4]);
 	return(0);
 }
