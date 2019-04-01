@@ -6,7 +6,8 @@ CryptoRandomDraft/
     crytorandom.py --> cryptorandom.pyx
     sample.py      --> sample.pyx
     cmodule/
-        cryptorandom_c.c
+        SHA256PRNG.h
+        SHA256PRNG.c
             SHA256
             __init__
             __repr__
