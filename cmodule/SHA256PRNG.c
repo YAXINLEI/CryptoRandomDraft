@@ -5,13 +5,6 @@
 #include "SHA256PRNG.h"
 #include "sha256.h"
 
-//class
-struct SHA256PRNG {
-    char* baseseed;
-    int counter;
-    int basehash;
-    SHA256_CTX ctx;
-};
 
 //Constructor
 void SHA256PRNG__init(SHA256PRNG* self, char* seed) {
