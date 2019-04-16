@@ -72,13 +72,12 @@ void next(SHA256PRNG* self) {
 }
 
 BYTE* nextRandom(SHA256PRNG* self) {
-    BYTE hash_output[] = &(self->ctx);//problem here
 	sha256_init(&(self->ctx));
 	sha256_update(&(self->ctx), &(self->ctx), strlen(self->ctx));
 	sha256_final(&(self->ctx), self->currbuf);
 
     next(self);
-    return hash_output;
+    return self->currbuf;
 }
 
 int random(SHA256PRNG* self, int size) {
