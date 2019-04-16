@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <memory.h>
 #include <string.h>
-#include "sha256.h"
+#include "sha256.c"
 
 /*********************** FUNCTION DEFINITIONS ***********************/
 int sha256_test()

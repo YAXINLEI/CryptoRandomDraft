@@ -7,7 +7,6 @@
 #include "SHA256PRNG.h"
 #include "sha256.h"
 
-
 //Constructor
 void SHA256PRNG__init(SHA256PRNG* self, char* seed) {
     self->baseseed = seed;
@@ -17,7 +16,7 @@ void SHA256PRNG__init(SHA256PRNG* self, char* seed) {
 //equivalent to "SHA256PRNG(seed)"
 SHA256PRNG* SHA256PRNG__create(char* seed){
     SHA256PRNG* result = (SHA256PRNG*) malloc(sizeof(SHA256PRNG));
-    Point__init(result, seed);
+    SHA256PRNG__init(result, seed);
     return result;
 }
 
@@ -29,25 +28,22 @@ void SHA256PRNG__destroy(SHA256PRNG* self) {
 }
 
 //equivalent to "SHA256PRNG-> seed()"
-char* SHA256PRNG__seed(SHA256PRNG* self, char* seed) {
-    return self->baseseed = seed;
+void SHA256PRNG__seed(SHA256PRNG* self, char* seed) {
+    self->baseseed = seed;
 } 
 
 //equivalent to "SHA256PRNG-> counter()"
-int SHA256PRNG__counter(SHA256PRNG* self, int counter) {
-    return self->counter = counter;
+void SHA256PRNG__counter(SHA256PRNG* self, int counter) {
+    self->counter = counter;
 }
-
 
 
 void _basehash(SHA256PRNG* self) {
     if(self->basehash) {//basehash is not None/null
-        BYTE buf[SHA256_BLOCK_SIZE];
-
 	    sha256_init(&(self->ctx));
 	    sha256_update(&(self->ctx), self->baseseed, strlen(self->baseseed));
-	    sha256_final(&(self->ctx), buf);
-        self->basehash = 0;
+	    sha256_final(&(self->ctx), self->currbuf);
+        self->basehash = 0;//dont need 
     } else {
         self->basehash = NULL;
     }
@@ -68,7 +64,7 @@ int* getStateCounter(SHA256PRNG* self) {
 
 void jumpahead(SHA256PRNG* self, int n) {
     self->counter = self->counter + n;
-    self->basehash;
+    self->currseed = strcat(self->baseseed, ",", self->counter);
 }
 
 void next(SHA256PRNG* self) {
@@ -77,6 +73,10 @@ void next(SHA256PRNG* self) {
 
 BYTE* nextRandom(SHA256PRNG* self) {
     BYTE hash_output[] = &(self->ctx);//problem here
+	sha256_init(&(self->ctx));
+	sha256_update(&(self->ctx), &(self->ctx), strlen(self->ctx));
+	sha256_final(&(self->ctx), self->currbuf);
+
     next(self);
     return hash_output;
 }
@@ -86,10 +86,12 @@ int random(SHA256PRNG* self, int size) {
         BYTE* hash_output = nextRandom(self);
         return *((int*) (hash_output));
     } else {
-        int hash_output[size];//why? [5] is okay...
+        
+        int hash_output[] = malloc(sizeof(int)*size);//why? [5] is okay...
         for(int i = 0; i < size; i++) {
             hash_output[i] = *((int*) (nextRandom(self)));
         }
+        free(hash_output);
         return hash_output;
     }
 }
