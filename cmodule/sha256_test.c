@@ -16,6 +16,7 @@
 #include <memory.h>
 #include <string.h>
 #include "sha256.c"
+#include "functions.c"
 
 /*********************** FUNCTION DEFINITIONS ***********************/
 int sha256_test()
@@ -52,30 +53,6 @@ int sha256_test()
 	pass = pass && !memcmp(hash3, buf, SHA256_BLOCK_SIZE);
 
 	return(pass);
-}
-
-
-int * sample_n(int n)
-{
-	SHA256_CTX ctx;
-	BYTE text1[] = {"abc"};
-
-	int * ptr = (int*) malloc(n * sizeof(int));
-
-	for (int i = 0; i < n/8 + 1; i++) {
-
-		BYTE buf[SHA256_BLOCK_SIZE];
-
-		sha256_init(&ctx);
-		sha256_update(&ctx, text1, strlen(text1));
-		sha256_final(&ctx, buf);
-
-		for (int j = 0; j < 8; j++) {
-			ptr[i+j] = ((int)buf[j] << 24) + ((int)buf[j+1] << 16) + ((int)buf[j+2] << 8) + (int)buf[j+3];
-		}
-		// How to update the bytes?
-	}
-	return(ptr);
 }
 
 
