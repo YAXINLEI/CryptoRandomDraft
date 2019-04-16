@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <memory.h>
 #include <math.h>
+#include <string.h>
 
 #include "SHA256PRNG.h"
 #include "sha256.h"
@@ -124,7 +125,30 @@ int randint_trunc(SHA256PRNG* self, int a, int b, int size) {
 }
 
 BYTE* getrandbits(SHA256PRNG* self, int k) {
-    //TODO
+    if (k/8 == 0) {
+        BYTE result[SHA256_BLOCK_SIZE * k/8];
+    } else {
+        BYTE result[SHA256_BLOCK_SIZE * k/8 + 1];
+    }
+    if (k > SHA256_BLOCK_SIZE) {
+        for (int i = 0; i < k/256; i++) {
+            BYTE buf[SHA256_BLOCK_SIZE];
+            sha256_init(&(self->ctx));
+            sha256_update(&(self->ctx), self->baseseed, strlen(self->baseseed));
+            sha256_final(&(self->ctx), buf);
+            self->basehash = 0;
+
+            memcpy(result[i], buf, SHA256_BLOCK_SIZE);
+        }
+    } else {
+        BYTE buf[SHA256_BLOCK_SIZE];
+        sha256_init(&(self->ctx));
+        sha256_update(&(self->ctx), self->baseseed, strlen(self->baseseed));
+        sha256_final(&(self->ctx), buf);
+        memcpy(result, buf, k);
+    }
+    return result;
+    
 }
 
 BYTE* randbelow_from_randbits(SHA256PRNG* self, int n) {
