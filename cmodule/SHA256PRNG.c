@@ -1,6 +1,7 @@
 
 //Header Files
 #include <stdlib.h>
+#include <stdio.h>
 #include <memory.h>
 #include <math.h>
 #include <string.h>
@@ -10,58 +11,92 @@
 
 
 //Constructor
-void SHA256PRNG__init(SHA256PRNG* self, char* seed) {
-    self->baseseed = seed;
+void SHA256PRNG__init(SHA256PRNG* self, char* seed, int seed_len) {
+    self = malloc(sizeof(SHA256PRNG));
+    self->baseseed = malloc(seed_len+1);    // one extra space for the null pointer
+
+    for (int i = 0; i <= seed_len; i += 1) {
+        self->baseseed[i] = seed[i];
+    }
     self->counter = 0;
 }
 
-//equivalent to "SHA256PRNG(seed)"
-SHA256PRNG* SHA256PRNG__create(char* seed){
-    SHA256PRNG* result = (SHA256PRNG*) malloc(sizeof(SHA256PRNG));
-    Point__init(result, seed);
-    return result;
-}
+
+// //equivalent to "SHA256PRNG(seed)"
+// SHA256PRNG* SHA256PRNG__create(char* seed){
+//     SHA256PRNG* result = (SHA256PRNG*) malloc(sizeof(SHA256PRNG));
+//     Point__init(result, seed);
+//     return result;
+// }
 
 //equivalent to "delete SHA256PRNG"
 void SHA256PRNG__destroy(SHA256PRNG* self) {
-    if (self) {
-        free(self);
-    }
+    // Free everything in the SHA256PRNG struct
+    free(self->baseseed);
+    free(self);
 }
 
 //equivalent to "SHA256PRNG-> seed()"
-char* SHA256PRNG__seed(SHA256PRNG* self, char* seed) {
-    return self->baseseed = seed;
+char* SHA256PRNG__seed(SHA256PRNG* self, char* seed, int seed_len) {
+    for (int i = 0; i < seed_len; i += 1) {
+        self->baseseed[i] = seed[i];
+    }
+    self->seedlength = seed_len;
+    return seed;
 } 
 
+
 //equivalent to "SHA256PRNG-> counter()"
-int SHA256PRNG__counter(SHA256PRNG* self, int counter) {
-    return self->counter = counter;
+void SHA256PRNG__counter(SHA256PRNG* self, int counter) {
+    self->counter = counter;
 }
 
 
 
 void _basehash(SHA256PRNG* self) {
     if(self->basehash) {//basehash is not None/null
-        BYTE buf[SHA256_BLOCK_SIZE];
+        BYTE* buf = malloc(sizeof(SHA256_BLOCK_SIZE));
 
 	    sha256_init(&(self->ctx));
-	    sha256_update(&(self->ctx), self->baseseed, strlen(self->baseseed));
+	    sha256_update(&(self->ctx), self->baseseed, self->seedlength);
 	    sha256_final(&(self->ctx), buf);
+        self->buf = buf;
         self->basehash = 0;
     } else {
-        self->basehash = NULL;
+        self->basehash = 0;
     }
 }
 
+
+int main(){
+    SHA256PRNG* temp;
+    char *string = {"abc"};
+    SHA256PRNG__init(temp, string, 3);
+    SHA256PRNG__counter(temp, 3);
+    _basehash(temp);
+    printf("%d/n", temp->buf[0]);
+    SHA256PRNG__destroy(temp);
+    return temp->counter;
+}
+
+
+
+
+
 void setstate(SHA256PRNG* self, char* baseseed, int counter) {
-    self->baseseed = baseseed;
+    free(self->baseseed);
+    self->baseseed = malloc(strlen(baseseed));
+
+    for (int i = 0; i < strlen(baseseed); i += 1) {
+        self->baseseed[i] = baseseed[i];
+    }
+
     self->counter = counter;
 }
 
 //original getstate split into two functions below:
-char* getStateBaseseed(SHA256PRNG* self) {
-    return &(self->baseseed);
+BYTE* getStateBaseseed(SHA256PRNG* self) {
+    return self->baseseed;
 }
 int* getStateCounter(SHA256PRNG* self) {
     return &(self->counter);
@@ -125,6 +160,8 @@ int randint_trunc(SHA256PRNG* self, int a, int b, int size) {
 }
 
 BYTE* getrandbits(SHA256PRNG* self, int k) {
+    BYTE *result;
+    
     if (k/8 == 0) {
         BYTE result[SHA256_BLOCK_SIZE * k/8];
     } else {
@@ -174,6 +211,32 @@ int* randint(SHA256PRNG* self, int a, int b, int size) {
         return hash_output;
     }
 }
+
+
+
+int* randint(int n)
+{
+	SHA256_CTX ctx;
+	BYTE text1[] = {"abc"};
+
+	int * ptr = (int*) malloc(n * sizeof(int));
+
+	for (int i = 0; i < n/8 + 1; i++) {
+
+		BYTE buf[SHA256_BLOCK_SIZE];
+
+		sha256_init(&ctx);
+		sha256_update(&ctx, text1, strlen(text1));
+		sha256_final(&ctx, buf);
+
+		for (int j = 0; j < 8; j++) {
+			ptr[i+j] = ((int)buf[j] << 24) + ((int)buf[j+1] << 16) + ((int)buf[j+2] << 8) + (int)buf[j+3];
+		}
+		// How to update the bytes?
+	}
+	return(ptr);
+}
+
 
 
 SHA256_CTX* helperHash(BYTE input[]) {
