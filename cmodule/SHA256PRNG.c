@@ -8,13 +8,13 @@
 #include "sha256.h"
 
 //Constructor
-void SHA256PRNG__init(SHA256PRNG* self, char* seed) {
+void SHA256PRNG__init(SHA256PRNG* self, BYTE* seed) {
     self->baseseed = seed;
     self->counter = 0;
 }
 
 //equivalent to "SHA256PRNG(seed)"
-SHA256PRNG* SHA256PRNG__create(char* seed){
+SHA256PRNG* SHA256PRNG__create(BYTE* seed){
     SHA256PRNG* result = (SHA256PRNG*) malloc(sizeof(SHA256PRNG));
     SHA256PRNG__init(result, seed);
     return result;
@@ -28,7 +28,7 @@ void SHA256PRNG__destroy(SHA256PRNG* self) {
 }
 
 //equivalent to "SHA256PRNG-> seed()"
-void SHA256PRNG__seed(SHA256PRNG* self, char* seed) {
+void SHA256PRNG__seed(SHA256PRNG* self, BYTE* seed) {
     self->baseseed = seed;
 } 
 
