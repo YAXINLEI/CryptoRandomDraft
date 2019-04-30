@@ -9,6 +9,7 @@
 #include <memory.h>
 #include <string.h>
 #include <stdbool.h>
+#include <math.h>
 #include "SHA256PRNG.h"
 
 
@@ -70,6 +71,21 @@ int* random_permutation(char* method, SHA256PRNG* prng) {
 
 /*******  SAMPLING FUNCTIONS  ******/
 int* fykd_sample(int n, int k, SHA256PRNG* prng) {
+    /**
+     * Use fykd to sample k out of 1, ..., n without replacement
+     * 
+     * Parameters:
+     * -----------
+     * n : int
+     *     Population size
+     * k : int
+     *     Desired sample size
+     * prng: SHA256PRNG
+     *     the SHA256PRNG that generates the random numbers
+     * Returns:
+     * --------
+     * pointer to array of randomized indices 
+     * */
     //problem with variable length arrays currently
     //how to create an array with variable length?
     int a[n];
@@ -92,6 +108,23 @@ int* fykd_sample(int n, int k, SHA256PRNG* prng) {
 }
 
 int* pikk(int n, int k, SHA256PRNG* prng) {
+    /**
+     * PIKK Algorithm: permute indices and keep k to draw a sample 
+     * from 1, ..., n without replacement
+     * (Assumes indexing starting at 1)
+     * 
+     * Parameters:
+     * ----------
+     * n : int
+     *     Population size
+     * k : int
+     *     Desired sample size
+     * prng: SHA256PRNG
+     *     the SHA256PRNG that generates the random numbers
+     * Returns:
+     * --------
+     * pointer to array of randomized indices 
+     * */
     int rand_n[n] = random(prng, n);
     int result[k];
     memcpy(result, &rand_n[1], k*sizeof(*rand_n));
@@ -132,7 +165,18 @@ bool containsElement(int element, int* array) {
 }
 
 int* waterman_r(int n, int k, SHA256PRNG* prng) {
-
+    //fill the reservoir
+    int S[k];
+    for(int i = 0; i < k; i++) {
+        S[i] = i+1;
+    }
+    for(int t = k+1; t < n+1; t++) {
+        int i = randint(1, t+1);
+        if(i <= k) {
+            S[i-1] = t;
+        }
+    }
+    return S;
 }
 
 int* vitter_z(int n, int k, SHA256PRNG* prng) {
@@ -140,13 +184,96 @@ int* vitter_z(int n, int k, SHA256PRNG* prng) {
 }
 
 int* sample_by_index(int n, int k, SHA256PRNG* prng) {
-
+    int nprime = n;
+    int S[k];
+    int currIndexS = 0;
+    int Pop[n]; //Pop = [1, 2, 3, ..., n]
+    int currIndexPop = 0;
+    for(int i = 0; i < n; i++) {
+        Pop[i] = i+1;
+    }
+    while(nprime > n-k) {
+        int w = randint(1, nprime + 1);
+        int j = Pop[w-1];
+        S[currIndexS] = j;//append j to current end of S
+        currIndexS ++;
+        int lastvalue = Pop[currIndexPop];//the last value from Pop
+        currIndexPop ++;
+        if(w < nprime) {
+            Pop[w-1] = lastvalue;
+        }
+        nprime--;
+    }
+    return S;
 }
 
-int* elimination_sample(int n, int k, SHA256PRNG* prng) {
+int* elimination_sample(int k, int* weights, bool replace, SHA256PRNG* prng) {
+    /**
+     * 
+     **/
+    int n = sizeof(weights)/sizeof(weights[0]);//length of weights/array to choose from
+    long totalSum = 0;
+    for(int i = 0; i < n; i++) {
+        totalSum += weights[i];
+        if (weights[i] < 0) {
+            return;//raise value error? 
+        }
+    }
+    if(replace) {//with replacement
+        float cumulativeSum[n];//weights cumulative and normalized weights
+        float currCumulativeSum = 0;
+        for(int i = 0; i < n; i++) {
+            cumulativeSum[i] = currCumulativeSum + weights[i]/totalSum;
+            currCumulativeSum += cumulativeSum[i];
+        }
+        int toSampleFrom[k];
+        for(int i = 0; i < k; i++) {
+            toSampleFrom[k] = i;
+        }
+        int sam[k] = random(prng, toSampleFrom);
+        int result[k];
+        for(int i = 0; i < k; i++) {
+            result[i] = sam[i] + 1;//?
+        }
+    } else {//no replacement
+        int* weights_left = memccpy(weights_left, weights, n, sizeof(int));
+        int* indices_left[n];
+        helperRange(indices_left, n);
+        for(int i = 0; i < k; i++) {
 
+        }
+
+
+    }
+    
 }
 
-int* exponential_sample(int n, int k, SHA256PRNG* prng) {
+int* exponential_sample(int k, int* weights, SHA256PRNG* prng) {
+    int n = sizeof(weights)/sizeof(weights[0]);//length of weights/array to choose from
+    int result[k];
+    for(int i = 0; i < n; i++) {
+        if (weights[i] < 0) {
+            return;//raise value error? 
+        }
+    }
+    if(k > n) {//sample size larger than pop in sample w/o repl
+        return; //raise value error?
+    } else if(k == n) {
+        //just return all indices (0, 1, ..., n)
+        helperRange(result, k);
+        return result;
+    } else {
+        int sam[n] = random(prng, n);
+        
+        int sample[k];
+        return sample;
+    }
+}
 
+
+//helper: returns a list 1, 2, ..., n
+void helperRange(int* location, int n) {
+    for(int i = 0; i < n; i++) {
+        location[i] = i;
+    }
 }
